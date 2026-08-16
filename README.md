@@ -43,8 +43,8 @@ Human developers will review and validate AI-generated outputs.
 
 | Member | Role |
 |---|---|
-| Member 1 | Frontend & Product Lead |
-| Member 2 | Backend & AI/RAG Lead |
+| Snigdha Ferdousi | Frontend & Product Lead |
+| Jakia Khatun | Backend & AI/RAG Lead |
 
 ## Project Status
 
