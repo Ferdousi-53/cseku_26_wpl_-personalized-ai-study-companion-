@@ -1,51 +1,19 @@
-# Personalized AI Study Companion
+# React + Vite
 
-A personalized AI-powered study companion designed to help students prepare for examinations through knowledge-grounded question answering, previous-year question analysis, AI tutoring, and adaptive study planning.
+This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
-## Project Overview
+Currently, two official plugins are available:
 
-The system aims to provide students with a personalized academic workspace where they can manage study materials, analyze previous-year questions, learn through an AI tutor, and receive personalized daily study plans.
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-## Core Features
+## React Compiler
 
-- Student authentication and profile
-- Course/exam management
-- Study material upload
-- Student-specific knowledge base
-- Vector database and RAG-based question answering
-- Previous-year question analysis
-- Step-by-step question solving
-- AI tutor mode
-- Personalized daily study planner
-- Adaptive study planning
-- Progress and weak-topic tracking
+The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
 
-## Target Users
+Note: This will impact Vite dev & build performances.
+You can also try [the experimental native React Compiler support in plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md#rust-react-compiler) by using `compiler: true` in the plugin options instead of using the Babel plugin.
 
-Initially, the system will focus on students preparing for university admission examinations. The architecture may later be extended to BCS preparation and university academic courses.
+## Expanding the Oxlint configuration
 
-## AI and Agentic AI
-
-The project will use AI-assisted development throughout the software engineering lifecycle.
-
-Potential development agents include:
-
-- Requirement Agent
-- Design Agent
-- Coding Agent
-- Testing Agent
-- Debugging Agent
-- Code Review Agent
-
-Human developers will review and validate AI-generated outputs.
-
-## Development Team
-
-| Member | Role |
-|---|---|
-| Snigdha Ferdousi | Frontend & Product Lead |
-| Jakia Khatun | Backend & AI/RAG Lead |
-
-## Project Status
-
-🚧 Initial Development / Week 1
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
