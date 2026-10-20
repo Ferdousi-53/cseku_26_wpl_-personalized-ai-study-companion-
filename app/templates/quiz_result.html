@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Quiz Result - StudyMate AI{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="page-eyebrow">{{ subject.subject_name }}{% if is_review %} &middot; {{ review_date }}{% endif %}</div>
+    <h2>{{ 'Quiz Review' if is_review else 'Quiz Result' }}</h2>
+</div>
+
+<div class="score-banner">
+    <div class="score-value">{{ score }} / {{ total }}</div>
+    <div class="score-label">{{ (score * 100 / total) | round | int }}% correct</div>
+</div>
+
+{% if is_review %}
+<div style="margin-bottom: 18px;">
+    <button type="button" class="btn btn-ghost" id="toggle-wrong" onclick="
+        var only = this.dataset.only !== '1';
+        this.dataset.only = only ? '1' : '0';
+        this.textContent = only ? 'Show all questions' : 'Show only wrong answers';
+        document.querySelectorAll('.result-card.correct').forEach(function (c) { c.style.display = only ? 'none' : ''; });">Show only wrong answers</button>
+</div>
+{% endif %}
+
+{% for r in results %}
+    <div class="result-card {% if r.is_correct %}correct{% endif %}">
+        <h6>{{ loop.index }}. {{ r.question }}</h6>
+        {% for option in r.options %}
+            <div class="result-option
+                {% if loop.index0 == r.correct_index %}right-answer
+                {% elif loop.index0 == r.selected_index %}wrong-pick{% endif %}">
+                {{ option }}
+                {% if loop.index0 == r.correct_index %} &check; correct answer{% endif %}
+                {% if loop.index0 == r.selected_index and not r.is_correct %} &mdash; your answer{% endif %}
+            </div>
+        {% endfor %}
+        {% if r.explanation %}
+        <div class="result-explain"><b>Why:</b> {{ r.explanation }}</div>
+        {% endif %}
+    </div>
+{% endfor %}
+
+<div style="margin: 24px 0 8px;">
+    <form method="POST" action="{{ url_for('start_weak_quiz', subject_id=subject.id) }}" class="inline-form" onsubmit="var b=this.querySelector('button');b.disabled=true;b.textContent='Quiz toiri hocche...';"><button type="submit" class="btn btn-primary">Practice weak topics</button></form>
+</div>
+{% if is_review %}
+<a href="{{ url_for('quiz_history', subject_id=subject.id) }}" class="back-link">&larr; Back to Quiz History</a>
+{% else %}
+<a href="{{ url_for('dashboard') }}" class="back-link">&larr; Back to Dashboard</a>
+{% endif %}
+
+{% endblock %}

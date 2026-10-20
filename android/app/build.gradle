@@ -1,0 +1,16 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.studymateai.mobile'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.studymateai.mobile'
+        minSdk 23
+        targetSdk 32
+        versionCode 1
+        versionName '1.0'
+    }
+}

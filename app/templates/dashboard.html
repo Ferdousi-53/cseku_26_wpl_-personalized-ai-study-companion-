@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - StudyMate AI{% endblock %}
+{% block content %}
+<div class="dx">
+
+  <section class="dx-hero">
+    <div>
+      <div class="dx-date">{{ today_label }}</div>
+      <h1>{{ greeting }}, {{ user.name.split()[0] }}</h1>
+      <p>
+        {% if focus %}
+          {% if focus.days_left is not none and focus.days_left >= 0 %}
+            Your {{ focus.name }} exam is {% if focus.days_left == 0 %}today{% else %}in {{ focus.days_left }} day{{ '' if focus.days_left == 1 else 's' }}{% endif %}.
+          {% else %}
+            Pick up where you left off in {{ focus.name }}.
+          {% endif %}
+          {% if plan_today %}
+            {% if plan_today.next_title %}
+              Today's plan: {{ plan_today.done }} of {{ plan_today.total }} done. Next up: {{ plan_today.next_title }}.
+            {% else %}
+              You finished all {{ plan_today.total }} tasks in today's plan. Well done!
+            {% endif %}
+          {% elif focus.weak_topic %}
+            Start with {{ focus.weak_topic }}, your weakest topic right now, then take a short quiz to lock it in.
+          {% else %}
+            Ask the AI about your notes, then take a quiz to see what sticks.
+          {% endif %}
+        {% else %}
+          Add your first subject, upload your notes, and start studying from them.
+        {% endif %}
+      </p>
+      <div class="dx-row">
+        {% if focus %}
+          <a class="btn btn-primary" href="{{ url_for('ai_tutor', subject_id=focus.id) }}">Continue studying</a>
+          <a class="btn btn-ghost" href="{{ url_for('quiz_setup', subject_id=focus.id) }}">Take a quiz</a>
+          <a class="btn btn-ghost" href="{{ url_for('study_plan', subject_id=focus.id) }}">{{ "Today's plan" if plan_today else 'Study plan' }}</a>
+        {% else %}
+          <a class="btn btn-primary" href="{{ url_for('add_subject') }}">Add subject</a>
+        {% endif %}
+      </div>
+    </div>
+    <div class="dx-streak">
+      <div class="dx-label">Study streak</div>
+      <b>{{ streak }} day{{ '' if streak == 1 else 's' }}</b>
+      <div class="dx-days">
+        {% for d in week %}<i class="{{ 'on' if d.on }}" title="{{ d.label }}"></i>{% endfor %}
+      </div>
+    </div>
+  </section>
+
+  {% if gam %}
+  <section class="dx-card dx-level">
+    <div class="lvl-ring">
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,0.09)" stroke-width="7"/>
+        <circle cx="32" cy="32" r="26" fill="none" stroke="var(--accent)" stroke-width="7" stroke-linecap="round" stroke-dasharray="{{ (gam.level.percent * 1.634)|round(1) }} 164"/>
+      </svg>
+      <span>{{ gam.level.level }}</span>
+    </div>
+    <div class="lvl-main">
+      <div class="lvl-title">Level {{ gam.level.level }}</div>
+      <div class="lvl-sub">{{ gam.level.xp }} XP total &middot; {{ gam.level.to_next }} XP to level {{ gam.level.level + 1 }}</div>
+      <div class="plan-bar" style="margin-top: 10px;"><i style="width: {{ gam.level.percent }}%; background: var(--accent);"></i></div>
+    </div>
+    <div class="lvl-badges">
+      {% for b in gam.recent %}<span class="medal tone-{{ b.tone }}" title="{{ b.name }}: {{ b.desc }}">{{ b.mark }}</span>{% endfor %}
+      <a href="{{ url_for('achievements') }}">{{ gam.earned }} of {{ gam.total }} badges</a>
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="dx-stats">
+    <div class="dx-card dx-stat"><span>Subjects</span><b>{{ stats.subjects }}</b><span>{{ stats.exams_soon }} with exams in 30 days</span></div>
+    <div class="dx-card dx-stat"><span>Quizzes taken</span><b>{{ stats.quizzes }}</b><span>{{ stats.quizzes_week }} in the last 7 days</span></div>
+    <div class="dx-card dx-stat"><span>Average score</span><b>{{ stats.avg_score ~ '%' if stats.avg_score is not none else '-' }}</b><span>{{ 'Across all quizzes' if stats.quizzes else 'Take a quiz to start' }}</span></div>
+    <div class="dx-card dx-stat"><span>Documents</span><b>{{ stats.documents }}</b><span>Ready for the AI tutor</span></div>
+  </section>
+
+  <div class="dx-cols">
+    <div class="dx-left">
+      <div class="dx-head">
+        <h2>Your subjects</h2>
+        <a class="btn btn-ghost" href="{{ url_for('add_subject') }}">Add subject</a>
+      </div>
+
+      {% if subjects_data %}
+      <div class="dx-subs">
+        {% for item in subjects_data %}
+        <article class="dx-card dx-sub tone-{{ item.tone }}">
+          <div>
+            <span class="dx-chip"><i></i>{{ item.subject.subject_code or 'No code' }}</span>
+          </div>
+          <div class="dx-mid">
+            <div class="dx-ring">
+              <svg viewBox="0 0 64 64" aria-hidden="true">
+                <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,0.09)" stroke-width="7"/>
+                {% if item.avg is not none %}
+                <circle cx="32" cy="32" r="26" fill="none" stroke="var(--tone)" stroke-width="7" stroke-linecap="round" stroke-dasharray="{{ (item.avg * 1.634)|round(1) }} 164"/>
+                {% endif %}
+              </svg>
+              <span>{{ item.avg ~ '%' if item.avg is not none else '-' }}</span>
+            </div>
+            <h3>{{ item.name }}</h3>
+          </div>
+          {% if item.days_left is not none %}
+            <span class="dx-chip u-{{ item.urgency }}"><i></i>
+              {% if item.days_left < 0 %}Exam date passed{% elif item.days_left == 0 %}Exam today{% else %}Exam in {{ item.days_left }} day{{ '' if item.days_left == 1 else 's' }}{% endif %}
+            </span>
+          {% endif %}
+          {% if item.weak_topic %}
+            <div class="dx-weak">Weakest: <b>{{ item.weak_topic }}</b> ({{ item.weak_acc }}%)</div>
+          {% endif %}
+          <div class="dx-acts">
+            <a class="btn btn-primary" href="{{ url_for('ai_tutor', subject_id=item.id) }}">Ask AI</a>
+            <a class="btn btn-ghost" href="{{ url_for('quiz_setup', subject_id=item.id) }}">Quiz</a>
+            <a class="btn btn-ghost" href="{{ url_for('upload_document', subject_id=item.id) }}">Docs</a>
+          </div>
+          <div class="dx-links">
+            <a href="{{ url_for('study_plan', subject_id=item.id) }}">Study plan</a>
+            <a href="{{ url_for('flashcards', subject_id=item.id) }}">Flashcards</a>
+            <a href="{{ url_for('summary_page', subject_id=item.id) }}">Smart summary <span class="pro-tag">Pro</span></a>
+            <a href="{{ url_for('exam_setup', subject_id=item.id) }}">Mock exam <span class="pro-tag">Pro</span></a>
+            <a href="{{ url_for('quiz_history', subject_id=item.id) }}">Quiz history</a>
+            <a href="{{ url_for('weak_topics', subject_id=item.id) }}">Weak topics</a>
+            <a class="danger" href="{{ url_for('delete_subject', subject_id=item.id) }}" onclick="return confirm('Delete this subject and all its data?')">Delete</a>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="dx-card dx-empty">
+        <h3>No subjects yet</h3>
+        <p>Add a subject, upload your notes as PDFs, and the tutor will answer from them.</p>
+        <div class="dx-row" style="justify-content:center"><a class="btn btn-primary" href="{{ url_for('add_subject') }}">Add your first subject</a></div>
+      </div>
+      {% endif %}
+
+      <div class="dx-card">
+        <h2 style="font-size:1.25rem">Score trend</h2>
+        {% if trend %}
+        <div class="dx-label" style="margin:6px 0 10px">Last {{ trend.count }} quizzes</div>
+        <svg viewBox="0 0 640 180" style="width:100%;height:auto" role="img" aria-label="Quiz score trend">
+          <path d="{{ trend.area }}" fill="var(--accent)" opacity=".16"/>
+          <polyline points="{{ trend.line }}" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+          <circle cx="{{ trend.last[0] }}" cy="{{ trend.last[1] }}" r="6" fill="var(--accent)"/>
+        </svg>
+        {% else %}
+        <p class="dx-label" style="margin-top:8px">Take at least two quizzes to see your score trend here.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <aside class="dx-side">
+      <div class="dx-card">
+        <h2 style="font-size:1.25rem">Upcoming exams</h2>
+        {% for item in upcoming %}
+          <div class="dx-item tone-{{ item.tone }}">
+            <div>{{ item.name }}<small>{{ item.subject.exam_date.strftime('%d %B') }}</small></div>
+            <span class="dx-chip u-{{ item.urgency }}"><i></i>{{ item.days_left }}d</span>
+          </div>
+        {% else %}
+          <p class="dx-label" style="margin-top:8px">No upcoming exam dates. Add one when you create a subject.</p>
+        {% endfor %}
+      </div>
+
+      <div class="dx-card">
+        <h2 style="font-size:1.25rem">Weak topics</h2>
+        {% for w in weak_list %}
+          <div class="dx-wk">
+            <div><span>{{ w.topic }}</span><b>{{ w.accuracy }}%</b></div>
+            <small>{{ w.subject_name }}</small>
+            <div class="dx-bar"><i style="width: {{ w.accuracy }}%"></i></div>
+          </div>
+        {% else %}
+          <p class="dx-label" style="margin-top:8px">Nothing weak yet. Weak topics appear after you take quizzes.</p>
+        {% endfor %}
+        {% if weak_list %}
+          <div class="dx-row"><form method="POST" action="{{ url_for('start_weak_quiz', subject_id=weak_list[0].subject_id) }}" class="inline-form" onsubmit="var b=this.querySelector('button');b.disabled=true;b.textContent='Quiz toiri hocche...';"><button type="submit" class="btn btn-primary">Practice weak topics</button></form></div>
+        {% endif %}
+      </div>
+    </aside>
+  </div>
+</div>
+{% endblock %}

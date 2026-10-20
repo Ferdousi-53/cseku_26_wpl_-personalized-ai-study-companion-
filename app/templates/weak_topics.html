@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Weak Topics - StudyMate AI{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="page-eyebrow">{{ subject.subject_name }}</div>
+    <h2>Weak Topics</h2>
+</div>
+
+{% if topics %}
+    {% for t in topics %}
+        {% set level = 'weak' if t.accuracy < 50 else ('medium' if t.accuracy < 75 else 'strong') %}
+        <div class="topic-row {{ level }}">
+            <div>
+                <div class="topic-name">{{ t.topic }}</div>
+                <div class="topic-meta">{{ t.correct }} correct &bull; {{ t.wrong }} wrong</div>
+            </div>
+            <div class="topic-bar-wrap">
+                <div class="topic-bar-fill" style="width: {{ t.accuracy }}%;"></div>
+            </div>
+            <div class="topic-accuracy">{{ t.accuracy }}%</div>
+        </div>
+    {% endfor %}
+    <p class="text-muted mt-3" style="font-size: 0.85rem;">Red rows need the most revision.</p>
+    {% if topics|selectattr('accuracy', 'lt', 70)|list %}
+    <div style="margin-top: 16px;">
+        <form method="POST" action="{{ url_for('start_weak_quiz', subject_id=subject.id) }}" class="inline-form" onsubmit="var b=this.querySelector('button');b.disabled=true;b.textContent='Quiz toiri hocche...';"><button type="submit" class="btn btn-primary">Practice weak topics</button></form>
+    </div>
+    {% endif %}
+{% else %}
+    <p class="text-muted">No quiz data yet &mdash; take a quiz to see your weak topics.</p>
+{% endif %}
+
+<a href="{{ url_for('dashboard') }}" class="back-link">&larr; Back to Dashboard</a>
+
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Smart Summary - StudyMate AI{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="page-eyebrow">{{ subject.subject_name }} <span class="pro-tag">Premium</span></div>
+    <h2>Smart Summary</h2>
+</div>
+
+{% if documents %}
+<div class="plan-card" style="margin-bottom: 20px;">
+    <form method="POST" action="{{ url_for('summary_generate', subject_id=subject.id) }}" id="sumForm">
+        <label class="setup-label">Summarise</label>
+        <div class="doc-chip-group mb-3">
+            {% for doc in documents %}
+                <div class="doc-chip">
+                    <input type="checkbox" name="document_ids" value="{{ doc.id }}" id="sm{{ doc.id }}" checked>
+                    <label for="sm{{ doc.id }}">{{ doc.filename }}</label>
+                </div>
+            {% endfor %}
+        </div>
+        <button type="submit" class="btn btn-primary" id="sumBtn">{{ 'Make a new summary' if saved else 'Make summary' }}</button>
+    </form>
+</div>
+{% else %}
+    <p class="text-muted">Upload a document first, then the AI can summarise it.</p>
+    <a href="{{ url_for('upload_document', subject_id=subject.id) }}" class="btn btn-primary">Upload document</a>
+{% endif %}
+
+{% if data %}
+<div class="sum-layout">
+    <div>
+        <div class="plan-card">
+            <div class="text-muted" style="font-size: 0.8rem;">{{ current.title }} &middot; {{ when }}</div>
+            <h4 class="up-h">Overview</h4>
+            <p>{{ data.overview }}</p>
+        </div>
+        {% if data.key_points %}
+        <div class="plan-card sum-block">
+            <h4 class="up-h">Key points</h4>
+            <ul class="up-list">{% for k in data.key_points %}<li>{{ k }}</li>{% endfor %}</ul>
+        </div>
+        {% endif %}
+        {% if data.terms %}
+        <div class="plan-card sum-block">
+            <h4 class="up-h">Important terms</h4>
+            {% for t in data.terms %}<div class="sum-term"><b>{{ t.term }}</b> <span class="text-muted">{{ t.meaning }}</span></div>{% endfor %}
+        </div>
+        {% endif %}
+        {% if data.exam_questions %}
+        <div class="plan-card sum-block">
+            <h4 class="up-h">Questions that may come in the exam</h4>
+            <ol class="up-list">{% for q in data.exam_questions %}<li>{{ q }}</li>{% endfor %}</ol>
+        </div>
+        {% endif %}
+    </div>
+    {% if saved|length > 1 %}
+    <aside class="plan-card sum-side">
+        <h4 class="up-h">Saved summaries</h4>
+        {% for s in saved %}
+        <a class="sum-item {{ 'on' if s.id == current.id else '' }}" href="{{ url_for('summary_page', subject_id=subject.id, s=s.id) }}">{{ s.title }}</a>
+        {% endfor %}
+    </aside>
+    {% endif %}
+</div>
+<form method="POST" action="{{ url_for('summary_delete', subject_id=subject.id, summary_id=current.id) }}" onsubmit="return confirm('Delete this summary?')" style="margin-top: 14px;">
+    <button class="btn btn-ghost btn-sm">Delete this summary</button>
+</form>
+{% endif %}
+
+<a href="{{ url_for('dashboard') }}" class="back-link">&larr; Back to Dashboard</a>
+
+<script>
+var sf = document.getElementById('sumForm');
+if (sf) sf.addEventListener('submit', function () {
+    var b = document.getElementById('sumBtn'); b.disabled = true; b.textContent = 'Summary toiri hocche... (kichu second lagte pare)';
+});
+</script>
+{% endblock %}

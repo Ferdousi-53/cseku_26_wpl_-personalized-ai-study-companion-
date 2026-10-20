@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Flashcards - StudyMate AI{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="page-eyebrow">{{ subject.subject_name }}</div>
+    <h2>Flashcards</h2>
+</div>
+
+{% if documents %}
+<div class="plan-card" style="margin-bottom: 20px;">
+    <form method="POST" action="{{ url_for('generate_flashcards', subject_id=subject.id) }}" id="cardForm">
+        <label class="setup-label">Make cards from</label>
+        <div class="doc-chip-group mb-3">
+            {% for doc in documents %}
+                <div class="doc-chip">
+                    <input type="checkbox" name="document_ids" value="{{ doc.id }}" id="fc{{ doc.id }}" checked>
+                    <label for="fc{{ doc.id }}">{{ doc.filename }}</label>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="plan-inline" style="margin-top: 0;">
+            <select name="count" class="form-select" aria-label="Number of cards">
+                <option value="5">5 cards</option>
+                <option value="10" selected>10 cards</option>
+                <option value="15">15 cards</option>
+                <option value="20">20 cards</option>
+            </select>
+            <button type="submit" class="btn btn-primary" id="cardBtn">{{ 'Add more cards' if cards else 'Make flashcards' }}</button>
+        </div>
+    </form>
+</div>
+{% else %}
+    <p class="text-muted">Upload a document first, then the AI can make cards from it.</p>
+    <a href="{{ url_for('upload_document', subject_id=subject.id) }}" class="btn btn-primary">Upload document</a>
+{% endif %}
+
+{% if cards %}
+<div class="fc-wrap" id="fcWrap">
+    <div class="fc-top">
+        <span id="fcCount"></span>
+        <span id="fcKnown">{{ known }} of {{ cards|length }} known</span>
+    </div>
+    <div class="plan-bar" style="margin-bottom: 16px;"><i id="fcBar" style="width: {{ (known * 100 / cards|length)|round|int }}%"></i></div>
+
+    <button type="button" class="fc-card" id="fcCard" aria-label="Flip card">
+        <span class="fc-topic" id="fcTopic"></span>
+        <span class="fc-text" id="fcText"></span>
+        <span class="fc-hint" id="fcHint">Click to see the answer</span>
+    </button>
+
+    <div class="fc-actions">
+        <button type="button" class="btn btn-ghost" id="fcPrev">&larr; Previous</button>
+        <button type="button" class="btn btn-ghost fc-again" id="fcAgain">Review again</button>
+        <button type="button" class="btn btn-primary" id="fcGot">I know this</button>
+        <button type="button" class="btn btn-ghost" id="fcNext">Next &rarr;</button>
+    </div>
+
+    <label class="fc-filter"><input type="checkbox" id="fcOnlyReview"> Show only cards I do not know yet</label>
+
+    <form method="POST" action="{{ url_for('clear_flashcards', subject_id=subject.id) }}" onsubmit="return confirm('Delete all flashcards for this subject?')" style="margin-top: 18px;">
+        <button type="submit" class="plan-go plan-go-btn" style="color: var(--muted);">Delete all cards</button>
+    </form>
+</div>
+
+<script>
+(function () {
+    var all = {{ cards|tojson }};
+    var markUrl = "{{ url_for('mark_flashcard', subject_id=subject.id, card_id=0) }}".replace('/0/mark', '/');
+    var i = 0, flipped = false;
+    var elCard = document.getElementById('fcCard'), elText = document.getElementById('fcText'),
+        elTopic = document.getElementById('fcTopic'), elHint = document.getElementById('fcHint'),
+        elCount = document.getElementById('fcCount'), elKnown = document.getElementById('fcKnown'),
+        elBar = document.getElementById('fcBar'), only = document.getElementById('fcOnlyReview');
+
+    function deck() { return only.checked ? all.filter(function (c) { return !c.known; }) : all; }
+    function updateStats() {
+        var k = all.filter(function (c) { return c.known; }).length;
+        elKnown.textContent = k + ' of ' + all.length + ' known';
+        elBar.style.width = Math.round(k * 100 / all.length) + '%';
+    }
+    function show() {
+        var d = deck();
+        if (!d.length) {
+            elTopic.textContent = '';
+            elText.textContent = 'You know every card. Great work! Add more cards or untick the filter to revise again.';
+            elHint.textContent = ''; elCount.textContent = '';
+            return;
+        }
+        if (i >= d.length) i = 0;
+        if (i < 0) i = d.length - 1;
+        var c = d[i];
+        elCard.classList.toggle('flipped', flipped);
+        elTopic.textContent = c.topic;
+        elText.textContent = flipped ? c.back : c.front;
+        elHint.textContent = flipped ? 'Answer' : 'Click to see the answer';
+        elCount.textContent = 'Card ' + (i + 1) + ' of ' + d.length;
+    }
+    function go(step) { i += step; flipped = false; show(); }
+    function mark(known) {
+        var d = deck(); if (!d.length) return;
+        var c = d[i]; c.known = known; updateStats();
+        var body = new URLSearchParams(); body.set('known', known ? '1' : '0');
+        fetch(markUrl + c.id + '/mark', { method: 'POST', body: body })
+            .then(function (r) { return r.json(); })
+            .then(function (d) { if (window.StudyRewards) window.StudyRewards.show(d.rewards); })
+            .catch(function () {});
+        flipped = false;
+        if (only.checked) { show(); } else { go(1); }
+    }
+    elCard.addEventListener('click', function () { flipped = !flipped; show(); });
+    document.getElementById('fcNext').addEventListener('click', function () { go(1); });
+    document.getElementById('fcPrev').addEventListener('click', function () { go(-1); });
+    document.getElementById('fcGot').addEventListener('click', function () { mark(true); });
+    document.getElementById('fcAgain').addEventListener('click', function () { mark(false); });
+    only.addEventListener('change', function () { i = 0; flipped = false; show(); });
+    show();
+})();
+</script>
+{% elif documents %}
+    <p class="text-muted">No flashcards yet. Pick your documents above and click <b>Make flashcards</b>.</p>
+{% endif %}
+
+<script>
+    var cardForm = document.getElementById('cardForm');
+    if (cardForm) {
+        cardForm.addEventListener('submit', function () {
+            var b = document.getElementById('cardBtn');
+            b.disabled = true; b.textContent = 'Making cards...';
+        });
+    }
+</script>
+
+<a href="{{ url_for('dashboard') }}" class="back-link">&larr; Back to Dashboard</a>
+
+{% endblock %}

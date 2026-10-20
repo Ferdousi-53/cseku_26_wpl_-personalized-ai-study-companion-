@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}StudyMate AI{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css', v=2) }}" rel="stylesheet">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+    <nav class="navbar navbar-expand">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('home') }}">
+                <span class="brand-mark">S</span> StudyMate AI
+            </a>
+            <div class="nav-actions">
+                {% if current_user.is_authenticated %}
+                    <a class="nav-link-plain" href="{{ url_for('dashboard') }}">Dashboard</a>
+                    <a class="nav-link-plain" href="{{ url_for('achievements') }}">Achievements</a>
+                    {% if prem and prem.admin %}<a class="nav-link-plain" href="{{ url_for('admin_payments') }}">Payments{% if prem.pending %} <span class="nav-count">{{ prem.pending }}</span>{% endif %}</a>{% endif %}
+                    <a class="nav-link-plain" href="{{ url_for('logout') }}">Logout</a>
+                    {% if prem and prem.active %}
+                        <a class="nav-premium" href="{{ url_for('upgrade') }}" title="Premium, {{ prem.days }} days left">Premium</a>
+                    {% else %}
+                        <a class="nav-upgrade" href="{{ url_for('upgrade') }}">Upgrade</a>
+                    {% endif %}
+                    <span class="nav-avatar" title="{{ current_user.name }}">{{ current_user.name[:1]|upper }}</span>
+                {% else %}
+                    <a class="nav-link-plain" href="{{ url_for('login') }}">Login</a>
+                    <a class="btn-nav-register" href="{{ url_for('register') }}">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for message in messages %}
+              <div class="alert alert-info">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+    <script>window.__rewards = {{ (rewards or none)|tojson }};</script>
+    {% include "_rewards.html" %}
+</body>
+</html>

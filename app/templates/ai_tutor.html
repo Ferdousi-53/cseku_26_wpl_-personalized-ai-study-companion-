@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}AI Tutor - StudyMate AI{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="page-eyebrow">{{ subject.subject_name }}</div>
+    <div class="chat-topbar">
+        <h2 class="mb-0">AI Tutor</h2>
+        <a href="{{ url_for('ai_tutor', subject_id=subject.id, chat='new') }}" class="new-chat-link">+ New chat</a>
+    </div>
+</div>
+
+{% if documents %}
+<div class="chat-page">
+    <div class="chat-sidebar">
+        <a class="new-chat-btn" href="{{ url_for('ai_tutor', subject_id=subject.id, chat='new') }}">+ New chat</a>
+        <div class="chat-list">
+            {% if not active_id %}
+                <div class="chat-card active"><span class="chat-card-link"><span class="chat-card-title">New chat</span></span></div>
+            {% endif %}
+            {% for c in chat_list %}
+                <div class="chat-card {{ 'active' if c.id == active_id }}">
+                    <a class="chat-card-link" href="{{ url_for('ai_tutor', subject_id=subject.id, chat=c.id) }}">
+                        <span class="chat-card-title">{{ c.title }}</span>
+                        <span class="chat-card-date">{{ c.when }}</span>
+                    </a>
+                    <form method="POST" action="{{ url_for('delete_chat', subject_id=subject.id, chat_id=c.id) }}"
+                          onsubmit="return confirm('Delete this chat?')">
+                        <button type="submit" class="chat-card-del" title="Delete chat" aria-label="Delete chat">&times;</button>
+                    </form>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="chat-docs">
+            <h6>Answer using</h6>
+            {% for doc in documents %}
+                <div class="sidebar-doc">
+                    <input type="checkbox" form="chatForm" name="document_ids" value="{{ doc.id }}" id="doc{{ doc.id }}"
+                           {% if doc.id in selected_ids %}checked{% endif %}>
+                    <label for="doc{{ doc.id }}">{{ doc.filename }}</label>
+                </div>
+            {% endfor %}
+            <div class="sidebar-foot">
+                <a href="{{ url_for('upload_document', subject_id=subject.id) }}">+ Upload more</a>
+            </div>
+        </div>
+    </div>
+    <div class="chat-main">
+        <div class="chat-messages" id="chatMessages">
+            {% if not messages %}
+                <div class="chat-empty">Ask anything about your uploaded notes — answers will only come from the documents checked on the left.</div>
+            {% endif %}
+            {% for m in messages %}
+                {% if m.role == 'user' %}
+                    <div class="msg-row user">
+                        <div class="msg-bubble">{{ m.text }}</div>
+                    </div>
+                {% else %}
+                    <div class="msg-row ai">
+                        <div class="msg-avatar">S</div>
+                        <div class="msg-content">
+                            <div class="msg-text">{{ m.text }}</div>
+                            {% if m.sources %}
+                                <div class="msg-sources">
+                                    {% for s in m.sources %}
+                                        <div class="msg-source-chip">{{ s[:160] }}...</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="chat-input-bar">
+            <form method="POST" id="chatForm" class="chat-input-row">
+                <input type="hidden" name="chat_id" value="{{ active_id or '' }}">
+                <textarea name="question" rows="1" placeholder="Ask a question..." required>{{ prefill or '' }}</textarea>
+                <button type="submit" class="chat-send-btn">&#10148;</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% else %}
+    <p class="text-muted">No documents uploaded for this subject yet.</p>
+    <a href="{{ url_for('upload_document', subject_id=subject.id) }}" class="btn btn-primary">Upload Document</a>
+{% endif %}
+
+<a href="{{ url_for('dashboard') }}" class="back-link">&larr; Back to Dashboard</a>
+
+<script>
+    var chatBox = document.getElementById('chatMessages');
+    if (chatBox) { chatBox.scrollTop = chatBox.scrollHeight; }
+
+    // Show AI answers with bold text and bullet lists instead of raw ** and * marks
+    function formatAnswer(text) {
+        text = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        var out = [], inList = false;
+        text.split('\n').forEach(function (line) {
+            var m = line.match(/^\s*[\*\-]\s+(.*)$/);
+            if (m) {
+                if (!inList) { out.push('<ul>'); inList = true; }
+                out.push('<li>' + m[1] + '</li>');
+            } else {
+                if (inList) { out.push('</ul>'); inList = false; }
+                out.push(line === '' ? '<br>' : line + '<br>');
+            }
+        });
+        if (inList) out.push('</ul>');
+        return out.join('');
+    }
+    document.querySelectorAll('.msg-row.ai .msg-text').forEach(function (el) {
+        el.innerHTML = formatAnswer(el.textContent);
+    });
+
+    var form = document.getElementById('chatForm');
+    if (form && chatBox) {
+        var box = form.querySelector('textarea');
+        // Enter sends, Shift+Enter makes a new line
+        box.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); }
+        });
+        form.addEventListener('submit', function () {
+            var q = box.value.trim();
+            if (!q) return;
+            var empty = chatBox.querySelector('.chat-empty');
+            if (empty) empty.remove();
+            var u = document.createElement('div');
+            u.className = 'msg-row user';
+            u.innerHTML = '<div class="msg-bubble"></div>';
+            u.firstChild.textContent = q;
+            chatBox.appendChild(u);
+            var a = document.createElement('div');
+            a.className = 'msg-row ai';
+            a.innerHTML = '<div class="msg-avatar">S</div><div class="msg-content"><div class="msg-text">Thinking...</div></div>';
+            chatBox.appendChild(a);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            form.querySelector('button').disabled = true;
+        });
+    }
+</script>
+
+{% endblock %}

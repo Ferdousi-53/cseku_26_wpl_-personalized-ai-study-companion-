@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Achievements - StudyMate AI{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="page-eyebrow">Your progress</div>
+    <h2>Achievements</h2>
+</div>
+
+<div class="plan-card ach-top">
+    <div class="lvl-ring lvl-big">
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+            <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,0.09)" stroke-width="6"/>
+            <circle cx="32" cy="32" r="26" fill="none" stroke="var(--accent)" stroke-width="6" stroke-linecap="round" stroke-dasharray="{{ (level.percent * 1.634)|round(1) }} 164"/>
+        </svg>
+        <span>{{ level.level }}</span>
+    </div>
+    <div>
+        <div class="plan-big">Level {{ level.level }}</div>
+        <div class="text-muted">{{ level.xp }} XP total &middot; {{ level.to_next }} XP to level {{ level.level + 1 }}</div>
+        <div class="plan-bar" style="margin-top: 12px; width: min(360px, 70vw);"><i style="width: {{ level.percent }}%; background: var(--accent);"></i></div>
+    </div>
+</div>
+
+<h3 class="ach-h">Badges <span class="text-muted" style="font-size: 0.9rem;">{{ earned_count }} of {{ badges|length }}</span></h3>
+<div class="ach-grid">
+    {% for b in badges %}
+    <button type="button" class="ach-badge {{ '' if b.earned else 'locked' }}" data-badge="{{ b|tojson|forceescape }}">
+        <span class="medal tone-{{ b.tone }} {{ '' if b.earned else 'locked' }}">{{ b.mark }}</span>
+        <div>
+            <div class="ach-name">{{ b.name }}</div>
+            <div class="ach-desc">{{ b.desc }}</div>
+            <div class="ach-date">{{ 'Earned ' ~ b.date if b.earned else 'Locked' }}</div>
+        </div>
+    </button>
+    {% endfor %}
+</div>
+
+<div class="levelup" id="badgeModal" hidden>
+    <div class="levelup-card badge-card">
+        <span class="medal" id="bmMedal"></span>
+        <h4 id="bmName" style="margin: 14px 0 4px;"></h4>
+        <div class="text-muted" id="bmDesc"></div>
+        <div class="plan-bar" style="margin: 16px 0 6px;"><i id="bmBar" style="background: var(--mint);"></i></div>
+        <div id="bmProg" class="text-muted" style="font-size: 0.85rem;"></div>
+        <p id="bmHow" style="margin: 14px 0 0; font-size: 0.92rem;"></p>
+        <button type="button" class="btn btn-sm btn-outline-light" id="bmClose" style="margin-top: 18px;">Close</button>
+    </div>
+</div>
+<script>
+(function () {
+    var m = document.getElementById('badgeModal');
+    function open(b) {
+        var med = document.getElementById('bmMedal');
+        med.className = 'medal tone-' + b.tone + (b.earned ? '' : ' locked');
+        med.textContent = b.mark;
+        document.getElementById('bmName').textContent = b.name;
+        document.getElementById('bmDesc').textContent = b.desc;
+        document.getElementById('bmBar').style.width = b.percent + '%';
+        document.getElementById('bmProg').textContent = b.earned
+            ? 'Earned ' + b.date
+            : b.current + ' of ' + b.target + ' ' + b.unit;
+        document.getElementById('bmHow').textContent = b.earned ? 'Nice work, this one is yours.' : 'How to get it: ' + b.how;
+        m.hidden = false;
+    }
+    document.querySelectorAll('[data-badge]').forEach(function (el) {
+        el.addEventListener('click', function () { open(JSON.parse(el.getAttribute('data-badge'))); });
+    });
+    document.getElementById('bmClose').addEventListener('click', function () { m.hidden = true; });
+    m.addEventListener('click', function (e) { if (e.target === m) m.hidden = true; });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') m.hidden = true; });
+})();
+</script>
+
+<h3 class="ach-h">How to earn XP</h3>
+<div class="plan-card ach-rules">
+    <div><b>Quiz:</b> 10 XP, plus 2 per correct answer, plus 20 for a perfect score (3+ questions)</div>
+    <div><b>Flashcard:</b> 2 XP the first time you mark a card as known</div>
+    <div><b>Study plan task:</b> 5 XP the first time you finish it</div>
+    <div><b>Daily bonus:</b> 5 XP for your first activity each day</div>
+</div>
+
+<h3 class="ach-h">Recent XP</h3>
+{% if recent %}
+<div class="plan-card">
+    {% for e in recent %}
+    <div class="plan-task" style="padding: 8px 0;">
+        <span style="flex: 1 1 200px;">{{ e.label }}</span>
+        <span class="text-muted" style="font-size: 0.82rem;">{{ e.when }}</span>
+        <b style="color: var(--mint);">+{{ e.points }}</b>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+    <p class="text-muted">No XP yet. Finish a quiz, learn a flashcard or tick a study plan task to start.</p>
+{% endif %}
+
+<a href="{{ url_for('dashboard') }}" class="back-link">&larr; Back to Dashboard</a>
+
+{% endblock %}

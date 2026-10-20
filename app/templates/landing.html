@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}StudyMate AI{% endblock %}
+{% block body_class %}landing-page{% endblock %}
+{% block content %}
+
+<div class="hero-wrap">
+    <div class="hero-glow"></div>
+    <div class="row align-items-center position-relative">
+        <div class="col-lg-6">
+            <h1 class="hero-title">Turn your own notes into an exam-ready study partner</h1>
+            <p class="hero-sub">Upload whatever your teacher gave you, ask questions in your own words, and quiz yourself on exactly what you uploaded — nothing else.</p>
+            <div class="hero-cta">
+                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">Get started</a>
+                <a href="{{ url_for('login') }}" class="btn btn-ghost">Login</a>
+            </div>
+            <div class="capability-strip">
+                <span class="capability-chip">Cites the exact source page</span>
+                <span class="capability-chip">Quiz any chapter you pick</span>
+                <span class="capability-chip">Works with your own PDFs</span>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="hero-visual">
+                <div class="demo-chat">
+                    <div class="chat-line user">
+                        <span class="chat-label">You asked</span>
+                        <p>What's the difference between Case 2 and Case 3 in the Bayesian classifier?</p>
+                    </div>
+                    <div class="chat-line ai">
+                        <span class="chat-label">StudyMate AI</span>
+                        <p>Case 2 assumes one shared covariance matrix across all classes, which gives linear decision boundaries. Case 3 lets each class have its own, which gives curved ones.</p>
+                        <span class="chat-source">Source: Pattern_Recognition_Lab3.pdf</span>
+                    </div>
+                    <div class="chat-footer">
+                        <span class="dot"></span>
+                        <span>Every answer cites its source PDF</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="steps-wrap">
+    <h2 class="section-title">How it works</h2>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="step-card">
+                <div class="step-number">01</div>
+                <h5>Upload your notes</h5>
+                <p>Create a subject, then upload the PDF notes, slides, or lab sheets your teacher gave you for it.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="step-card">
+                <div class="step-number">02</div>
+                <h5>Ask the AI Tutor</h5>
+                <p>Type a question in your own words. Pick one document or all of them — the answer comes only from what you uploaded.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="step-card">
+                <div class="step-number">03</div>
+                <h5>Practice with a quiz</h5>
+                <p>Choose how many questions you want and which chapters to cover, then see your score and weak topics.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="features-grid-wrap">
+    <h2 class="section-title">Everything you need before an exam</h2>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="feature-card">
+                <h5>Subject-wise organization</h5>
+                <p>Keep every course separate, with its own documents, quizzes, and progress.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <h5>Source-grounded answers</h5>
+                <p>The AI Tutor only answers from your uploaded notes, and shows exactly which passage it used.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <h5>Chapter-specific quizzes</h5>
+                <p>Select exactly which documents a quiz should come from, and how many questions you want.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <h5>Weak topic detection</h5>
+                <p>Every quiz attempt is tracked by topic, so you can see exactly where you need more revision.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <h5>Quiz history</h5>
+                <p>Track every attempt — your score, date, and overall improvement over time.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <h5>Your own documents, always</h5>
+                <p>Delete a document any time, and it's removed everywhere — including from quiz and AI Tutor answers.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="cta-wrap">
+    <h2>Ready to study smarter?</h2>
+    <p>Create your free account and upload your first subject in a minute.</p>
+    <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">Get started — it's free</a>
+</div>
+
+<div class="site-footer">
+    StudyMate AI — built as a university project at Khulna University.
+</div>
+
+{% endblock %}

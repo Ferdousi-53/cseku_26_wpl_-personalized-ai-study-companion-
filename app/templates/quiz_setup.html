@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Quiz Setup - StudyMate AI{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="page-eyebrow">{{ subject.subject_name }}</div>
+    <h2>Take a Quiz</h2>
+</div>
+
+{% if has_weak %}
+<div class="quiz-setup-box" style="margin-bottom: 20px;">
+    <p class="text-muted" style="margin-bottom: 12px;">You have weak topics. Get a quiz made just for them.</p>
+    <form method="POST" action="{{ url_for('start_weak_quiz', subject_id=subject.id) }}" class="inline-form" onsubmit="var b=this.querySelector('button');b.disabled=true;b.textContent='Quiz toiri hocche...';"><button type="submit" class="btn btn-primary">Practice weak topics</button></form>
+</div>
+{% endif %}
+
+{% if documents %}
+    <div class="quiz-setup-box">
+        <form method="POST" action="{{ url_for('start_quiz', subject_id=subject.id) }}">
+            <label class="setup-label">Which documents should this quiz cover?</label>
+            <div class="doc-chip-group mb-3">
+                {% for doc in documents %}
+                    <div class="doc-chip">
+                        <input type="checkbox" name="document_ids" value="{{ doc.id }}" id="doc{{ doc.id }}" checked>
+                        <label for="doc{{ doc.id }}">{{ doc.filename }}</label>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <label class="setup-label">How many questions?</label>
+            <div class="num-input-row mb-3">
+                <input type="number" name="num_questions" min="1" max="20" value="5" required>
+                <span class="text-muted" style="font-size: 0.85rem;">(1 - 20)</span>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Start Quiz</button>
+            <a href="{{ url_for('dashboard') }}" class="back-link">Cancel</a>
+        </form>
+    </div>
+{% else %}
+    <p class="text-muted">No documents uploaded yet for this subject.</p>
+    <a href="{{ url_for('upload_document', subject_id=subject.id) }}" class="btn btn-primary">Upload Document</a>
+{% endif %}
+
+<script>
+document.querySelector('form[action*="quiz"]')?.addEventListener('submit', function () {
+    var btn = this.querySelector('button[type=submit]');
+    btn.disabled = true;
+    btn.textContent = 'Quiz toiri hocche... (kichu second lagte pare)';
+});
+</script>
+
+{% endblock %}

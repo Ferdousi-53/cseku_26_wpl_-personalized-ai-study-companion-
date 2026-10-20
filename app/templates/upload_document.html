@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Documents - StudyMate AI{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="page-eyebrow">{{ subject.subject_name }}</div>
+    <h2>Documents</h2>
+</div>
+
+<div class="upload-box">
+    <form method="POST" enctype="multipart/form-data">
+        <div class="upload-icon">📄</div>
+        <p>Upload a PDF of your class notes, slides, or lab sheet for this subject.</p>
+        <input type="file" name="document" class="form-control" accept=".pdf" required>
+        <button type="submit" class="btn btn-primary mt-3">Upload</button>
+    </form>
+</div>
+
+{% if documents %}
+    {% for doc in documents %}
+        <div class="doc-row">
+            <div class="doc-info">
+                <div class="doc-icon">📄</div>
+                <div>
+                    <div class="doc-name">{{ doc.filename }}</div>
+                    <div class="doc-date">{{ doc.upload_date.strftime('%d %b %Y') }}</div>
+                </div>
+            </div>
+            <a href="{{ url_for('delete_document', document_id=doc.id) }}" class="doc-delete"
+               onclick="return confirm('Delete this document?')">Delete</a>
+        </div>
+    {% endfor %}
+{% else %}
+    <p class="text-muted">No documents uploaded yet.</p>
+{% endif %}
+
+<a href="{{ url_for('dashboard') }}" class="back-link">&larr; Back to Dashboard</a>
+
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Quiz History - StudyMate AI{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="page-eyebrow">{{ subject.subject_name }}</div>
+    <h2>Quiz History</h2>
+</div>
+
+{% if history %}
+    <div class="history-stats">
+        <div class="stat-box">
+            <div class="stat-value">{{ total_attempts }}</div>
+            <div class="stat-label">Total Attempts</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value">{{ average_percent }}%</div>
+            <div class="stat-label">Average Score</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value">{{ best_percent }}%</div>
+            <div class="stat-label">Best Score</div>
+        </div>
+    </div>
+
+    <p class="text-muted" style="margin-bottom: 12px; font-size: 0.9rem;">Click any quiz to see every question, your answers and the correct ones.</p>
+    <table class="history-table">
+        <thead>
+            <tr><th>Date</th><th>Score</th><th>Percentage</th><th></th></tr>
+        </thead>
+        <tbody>
+            {% for h in history %}
+                {% if h.has_details %}
+                {% set link = url_for('review_quiz', subject_id=subject.id, result_id=h.id) %}
+                <tr class="clickable" onclick="window.location='{{ link }}'">
+                    <td><a class="history-link" href="{{ link }}">{{ h.date }}</a></td>
+                    <td>{{ h.score }} / {{ h.total }}</td>
+                    <td><a class="history-link" href="{{ link }}">{{ h.percent }}%</a></td>
+                    <td class="view-cell">View answers &rsaquo;</td>
+                </tr>
+                {% else %}
+                <tr title="Details were not saved for this older quiz">
+                    <td>{{ h.date }}</td>
+                    <td>{{ h.score }} / {{ h.total }}</td>
+                    <td>{{ h.percent }}%</td>
+                    <td class="text-muted">-</td>
+                </tr>
+                {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p class="text-muted">No quiz attempts yet for this subject.</p>
+{% endif %}
+
+<a href="{{ url_for('dashboard') }}" class="back-link mt-3 d-inline-block">&larr; Back to Dashboard</a>
+
+{% endblock %}

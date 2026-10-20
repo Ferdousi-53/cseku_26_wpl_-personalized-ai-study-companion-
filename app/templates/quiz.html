@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Quiz - StudyMate AI{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="page-eyebrow">{{ subject.subject_name }}</div>
+    <h2>Quiz Time</h2>
+</div>
+
+<div class="quiz-progress">{{ quiz|length }} questions</div>
+
+<form method="POST" action="{{ url_for('submit_quiz', subject_id=subject.id) }}">
+    {% for q in quiz %}
+        {% set q_number = loop.index0 %}
+        <div class="question-card">
+            <h6>{{ q_number + 1 }}. {{ q.question }}</h6>
+            {% for option in q.options %}
+                <div class="option-choice">
+                    <input type="radio" name="q{{ q_number }}" id="q{{ q_number }}_o{{ loop.index0 }}" value="{{ loop.index0 }}" required>
+                    <label for="q{{ q_number }}_o{{ loop.index0 }}">{{ option }}</label>
+                </div>
+            {% endfor %}
+        </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">Submit Quiz</button>
+</form>
+
+{% endblock %}

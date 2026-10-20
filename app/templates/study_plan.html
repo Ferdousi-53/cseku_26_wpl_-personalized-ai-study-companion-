@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Study Plan - StudyMate AI{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="page-eyebrow">{{ subject.subject_name }}</div>
+    <h2>Study Plan</h2>
+</div>
+
+<div class="plan-top">
+    <div class="plan-card">
+        {% if subject.exam_date %}
+            <div class="plan-big">
+                {% if days_left is not none and days_left >= 0 %}{{ days_left }} day{{ '' if days_left == 1 else 's' }} to your exam
+                {% else %}Exam date has passed{% endif %}
+            </div>
+            <div class="text-muted" style="font-size: 0.88rem;">{{ subject.exam_date.strftime('%A, %d %B %Y') }}</div>
+            <details class="plan-change">
+                <summary>Change exam date</summary>
+                <form method="POST" action="{{ url_for('set_exam_date', subject_id=subject.id) }}" class="plan-inline">
+                    <input type="date" name="exam_date" class="form-control" value="{{ subject.exam_date.isoformat() }}" required>
+                    <button type="submit" class="btn btn-ghost">Save</button>
+                </form>
+            </details>
+        {% else %}
+            <div class="plan-big">Set your exam date</div>
+            <p class="text-muted" style="font-size: 0.88rem;">The AI plans backwards from it.</p>
+            <form method="POST" action="{{ url_for('set_exam_date', subject_id=subject.id) }}" class="plan-inline">
+                <input type="date" name="exam_date" class="form-control" required>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </form>
+        {% endif %}
+    </div>
+
+    <div class="plan-card">
+        <form method="POST" action="{{ url_for('generate_study_plan', subject_id=subject.id) }}" id="planForm">
+            <label class="setup-label" for="hours">Study time per day</label>
+            <div class="plan-inline">
+                <select name="hours" id="hours" class="form-select">
+                    <option value="1">About 1 hour</option>
+                    <option value="2" selected>About 2 hours</option>
+                    <option value="3">3 hours or more</option>
+                </select>
+                <button type="submit" class="btn btn-primary" id="planBtn">{{ 'Rebuild plan' if has_plan else 'Make my plan' }}</button>
+            </div>
+        </form>
+        <p class="text-muted" style="font-size: 0.82rem; margin: 10px 0 0;">
+            Uses your quiz results and notes. Covers up to the next 14 days.
+        </p>
+    </div>
+</div>
+
+{% if total %}
+<div class="plan-card" style="margin-bottom: 20px;">
+    <div class="plan-progress-head">
+        <span>Progress</span>
+        <span id="planProgressText">{{ completed }} of {{ total }} tasks done</span>
+    </div>
+    <div class="plan-bar"><i id="planProgressBar" style="width: {{ percent }}%"></i></div>
+</div>
+{% endif %}
+
+{% if missed %}
+<div class="plan-day missed">
+    <h3>Missed</h3>
+    {% for t in missed %}{% include "_plan_task.html" %}{% endfor %}
+</div>
+{% endif %}
+
+{% for day in days %}
+<div class="plan-day {{ 'today' if day.is_today }}">
+    <h3>{{ day.label }}</h3>
+    {% for t in day.tasks %}{% include "_plan_task.html" %}{% endfor %}
+</div>
+{% else %}
+    <p class="text-muted">No plan yet. Pick your daily study time and click <b>Make my plan</b>.</p>
+{% endfor %}
+
+<a href="{{ url_for('dashboard') }}" class="back-link">&larr; Back to Dashboard</a>
+
+<script>
+    document.querySelectorAll('.plan-check input').forEach(function (cb) {
+        cb.addEventListener('change', function () {
+            fetch(cb.dataset.url, { method: 'POST' })
+                .then(function (r) { return r.json(); })
+                .then(function (d) {
+                    cb.closest('.plan-task').classList.toggle('done', d.done);
+                    if (window.StudyRewards) window.StudyRewards.show(d.rewards);
+                    var text = document.getElementById('planProgressText');
+                    var bar = document.getElementById('planProgressBar');
+                    if (text) text.textContent = d.completed + ' of ' + d.total + ' tasks done';
+                    if (bar) bar.style.width = (d.total ? Math.round(d.completed * 100 / d.total) : 0) + '%';
+                })
+                .catch(function () { cb.checked = !cb.checked; });
+        });
+    });
+    var planForm = document.getElementById('planForm');
+    if (planForm) {
+        planForm.addEventListener('submit', function () {
+            var b = document.getElementById('planBtn');
+            b.disabled = true;
+            b.textContent = 'Making your plan...';
+        });
+    }
+</script>
+
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Add Subject - StudyMate AI{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="page-eyebrow">New subject</div>
+    <h2>Add a subject</h2>
+</div>
+
+<div class="quiz-setup-box" style="max-width: 520px;">
+    <form method="POST">
+        <div class="mb-3">
+            <label class="setup-label">Subject name</label>
+            <input type="text" name="subject_name" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label class="setup-label">Subject code (optional)</label>
+            <input type="text" name="subject_code" class="form-control">
+        </div>
+        <div class="mb-3">
+            <label class="setup-label">Exam date (optional)</label>
+            <input type="date" name="exam_date" class="form-control">
+        </div>
+        <button type="submit" class="btn btn-primary">Add subject</button>
+        <a href="{{ url_for('dashboard') }}" class="back-link">Cancel</a>
+    </form>
+</div>
+
+{% endblock %}

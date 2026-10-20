@@ -1,0 +1,69 @@
+<div id="rewardToasts" class="reward-toasts" aria-live="polite"></div>
+
+<div id="levelUp" class="levelup" hidden role="dialog" aria-modal="true" aria-labelledby="luTitle">
+    <div class="confetti-layer" id="confetti" aria-hidden="true"></div>
+    <div class="levelup-card">
+        <div class="levelup-small">Level up</div>
+        <div class="levelup-num" id="luNum"></div>
+        <h2 id="luTitle">You reached a new level</h2>
+        <p id="luSub"></p>
+        <button type="button" class="btn btn-primary" id="luClose">Keep going</button>
+    </div>
+</div>
+
+<script>
+(function () {
+    var toasts = document.getElementById('rewardToasts');
+    var overlay = document.getElementById('levelUp');
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function toast(kind, title, body) {
+        var el = document.createElement('div');
+        el.className = 'reward-toast ' + kind;
+        var t = document.createElement('div'); t.className = 'reward-title'; t.textContent = title;
+        el.appendChild(t);
+        if (body) { var b = document.createElement('div'); b.className = 'reward-body'; b.textContent = body; el.appendChild(b); }
+        toasts.appendChild(el);
+        setTimeout(function () { el.classList.add('out'); setTimeout(function () { el.remove(); }, 400); }, 6500);
+    }
+
+    function confetti() {
+        if (reduce) return;
+        var layer = document.getElementById('confetti');
+        layer.textContent = '';
+        var colors = ['#8b7cff', '#ff8a6b', '#4fd1a5', '#ffc94d'];
+        for (var i = 0; i < 42; i++) {
+            var p = document.createElement('i');
+            p.style.left = Math.random() * 100 + '%';
+            p.style.background = colors[i % colors.length];
+            p.style.animationDelay = (Math.random() * 0.8) + 's';
+            p.style.animationDuration = (2.2 + Math.random() * 1.6) + 's';
+            layer.appendChild(p);
+        }
+    }
+
+    function openLevelUp(level) {
+        document.getElementById('luNum').textContent = level.level;
+        document.getElementById('luSub').textContent = level.to_next + ' XP to level ' + (level.level + 1);
+        overlay.hidden = false;
+        confetti();
+        document.getElementById('luClose').focus();
+    }
+    function closeLevelUp() { overlay.hidden = true; }
+    document.getElementById('luClose').addEventListener('click', closeLevelUp);
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !overlay.hidden) closeLevelUp(); });
+
+    window.StudyRewards = {
+        show: function (r) {
+            if (!r) return;
+            var lines = (r.lines || []).map(function (l) { return l.label + ' +' + l.points; }).join('  |  ');
+            toast('xp', '+' + r.gained + ' XP', lines);
+            (r.badges || []).forEach(function (b, i) {
+                setTimeout(function () { toast('badge', 'Badge unlocked: ' + b.name, b.desc); }, 350 * (i + 1));
+            });
+            if (r.leveled_up) setTimeout(function () { openLevelUp(r.level); }, 500);
+        }
+    };
+    window.StudyRewards.show(window.__rewards);
+})();
+</script>

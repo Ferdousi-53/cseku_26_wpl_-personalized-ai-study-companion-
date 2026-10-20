@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Mock Exam - StudyMate AI{% endblock %}
+{% block content %}
+
+<div class="exam-bar" id="examBar">
+    <div>
+        <div class="page-eyebrow">{{ subject.subject_name }} &middot; Mock Exam</div>
+        <span class="text-muted" id="examAnswered">0 of {{ quiz|length }} answered</span>
+    </div>
+    <div class="exam-timer" id="examTimer" aria-live="off">--:--</div>
+</div>
+
+<form method="POST" action="{{ url_for('submit_quiz', subject_id=subject.id) }}" id="examQuiz">
+    {% for q in quiz %}
+        {% set q_number = loop.index0 %}
+        <div class="question-card">
+            <h6>{{ q_number + 1 }}. {{ q.question }}</h6>
+            {% for option in q.options %}
+                <div class="option-choice">
+                    <input type="radio" name="q{{ q_number }}" id="q{{ q_number }}_o{{ loop.index0 }}" value="{{ loop.index0 }}">
+                    <label for="q{{ q_number }}_o{{ loop.index0 }}">{{ option }}</label>
+                </div>
+            {% endfor %}
+        </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary" id="examSubmit">Submit exam</button>
+</form>
+
+<script>
+(function () {
+    var deadline = {{ deadline_ms }};
+    var total = {{ quiz|length }};
+    var form = document.getElementById('examQuiz');
+    var timer = document.getElementById('examTimer');
+    var bar = document.getElementById('examBar');
+    var sent = false;
+
+    function submit() { if (sent) return; sent = true; window.onbeforeunload = null; form.submit(); }
+    function tick() {
+        var left = Math.max(0, Math.round((deadline - Date.now()) / 1000));
+        var m = Math.floor(left / 60), s = left % 60;
+        timer.textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+        if (left <= 60) bar.classList.add('low');
+        if (left <= 0) { clearInterval(iv); timer.textContent = "Time's up"; submit(); }
+    }
+    var iv = setInterval(tick, 1000); tick();
+
+    function count() {
+        var n = 0;
+        for (var i = 0; i < total; i++) if (form.querySelector('input[name="q' + i + '"]:checked')) n++;
+        document.getElementById('examAnswered').textContent = n + ' of ' + total + ' answered';
+    }
+    form.addEventListener('change', count);
+
+    form.addEventListener('submit', function (e) {
+        if (sent) return;
+        var n = 0; for (var i = 0; i < total; i++) if (form.querySelector('input[name="q' + i + '"]:checked')) n++;
+        if (n < total && !confirm((total - n) + ' question unanswered. Submit anyway?')) { e.preventDefault(); return; }
+        sent = true; window.onbeforeunload = null;
+    });
+    window.onbeforeunload = function () { return 'Exam cholche. Page chhere gele timer cholte thakbe.'; };
+})();
+</script>
+{% endblock %}

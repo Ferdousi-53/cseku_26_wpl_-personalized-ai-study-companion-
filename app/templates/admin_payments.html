@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Payments - StudyMate AI{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="page-eyebrow">Admin</div>
+    <h2>Payment requests</h2>
+</div>
+
+<p class="text-muted">Check each TrxID and amount in your bKash app ({{ number }}) before approving. Approving gives {{ days }} days of Premium.</p>
+
+<h3 class="ach-h">Pending <span class="text-muted" style="font-size: 0.9rem;">{{ pending|length }}</span></h3>
+{% if pending %}
+<div class="plan-card">
+    {% for r in pending %}
+    <div class="plan-task adm-row">
+        <div style="flex: 1 1 240px;">
+            <div><b>{{ r.name }}</b> <span class="text-muted">{{ r.email }}</span></div>
+            <div>TrxID <code>{{ r.trx }}</code> &middot; from {{ r.phone }} &middot; &#2547;{{ r.amount }}</div>
+            <div class="text-muted" style="font-size: 0.8rem;">{{ r.when }}</div>
+        </div>
+        <form method="POST" action="{{ url_for('admin_review', req_id=r.id, action='approve') }}" class="inline-form"><button class="btn btn-primary btn-sm">Approve</button></form>
+        <form method="POST" action="{{ url_for('admin_review', req_id=r.id, action='reject') }}" class="inline-form" onsubmit="return confirm('Reject this payment?')"><button class="btn btn-ghost btn-sm">Reject</button></form>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+    <p class="text-muted">Nothing waiting.</p>
+{% endif %}
+
+<h3 class="ach-h">Recently reviewed</h3>
+{% if done %}
+<div class="plan-card">
+    {% for r in done %}
+    <div class="plan-task" style="padding: 8px 0;">
+        <span style="flex: 1 1 220px;">{{ r.name }} &middot; <code>{{ r.trx }}</code></span>
+        <span class="text-muted" style="font-size: 0.82rem;">{{ r.reviewed }}</span>
+        <b class="up-status s-{{ r.status }}">{{ r.status|capitalize }}</b>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+    <p class="text-muted">No reviewed requests yet.</p>
+{% endif %}
+
+<a href="{{ url_for('dashboard') }}" class="back-link">&larr; Back to Dashboard</a>
+{% endblock %}

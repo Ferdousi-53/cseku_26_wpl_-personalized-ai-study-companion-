@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Mock Exam - StudyMate AI{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="page-eyebrow">{{ subject.subject_name }} <span class="pro-tag">Premium</span></div>
+    <h2>Mock Exam</h2>
+</div>
+
+{% if documents %}
+<div class="quiz-setup-box">
+    <p class="text-muted">A real exam feel: harder questions, a countdown timer (1 minute per question), and the test submits itself when time runs out.</p>
+    <form method="POST" action="{{ url_for('exam_start', subject_id=subject.id) }}" id="examForm">
+        <label class="setup-label">Which documents should the exam cover?</label>
+        <div class="doc-chip-group mb-3">
+            {% for doc in documents %}
+                <div class="doc-chip">
+                    <input type="checkbox" name="document_ids" value="{{ doc.id }}" id="ex{{ doc.id }}" checked>
+                    <label for="ex{{ doc.id }}">{{ doc.filename }}</label>
+                </div>
+            {% endfor %}
+        </div>
+        <label class="setup-label">Exam length</label>
+        <div class="plan-inline" style="margin: 0 0 16px;">
+            <select name="size" class="form-select" aria-label="Exam length">
+                {% for n in sizes %}<option value="{{ n }}" {{ 'selected' if n == 20 else '' }}>{{ n }} questions, {{ n }} minutes</option>{% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary" id="examBtn">Start exam</button>
+        <a href="{{ url_for('dashboard') }}" class="back-link">Cancel</a>
+    </form>
+</div>
+{% else %}
+    <p class="text-muted">Upload a document first.</p>
+    <a href="{{ url_for('upload_document', subject_id=subject.id) }}" class="btn btn-primary">Upload document</a>
+{% endif %}
+
+<script>
+var ef = document.getElementById('examForm');
+if (ef) ef.addEventListener('submit', function () {
+    var b = document.getElementById('examBtn'); b.disabled = true; b.textContent = 'Exam toiri hocche... (kichu second lagte pare)';
+});
+</script>
+{% endblock %}

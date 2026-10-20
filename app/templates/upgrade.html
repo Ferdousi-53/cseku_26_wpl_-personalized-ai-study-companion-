@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Upgrade - StudyMate AI{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="page-eyebrow">Premium</div>
+    <h2>Upgrade your account</h2>
+</div>
+
+{% if feature %}
+<div class="plan-card up-notice"><b>{{ feature }}</b> is a Premium feature. Upgrade below to unlock it.</div>
+{% endif %}
+
+{% if until %}
+<div class="plan-card up-active">
+    You are Premium until <b>{{ until }}</b>. Pay again any time to add {{ days }} more days.
+</div>
+{% endif %}
+
+<div class="up-grid">
+    <div class="plan-card">
+        <div class="plan-big">&#2547;{{ price }} <span class="text-muted" style="font-size: 0.95rem;">/ {{ days }} days</span></div>
+        <ul class="up-list">
+            {% for f in features %}<li>{{ f }}</li>{% endfor %}
+            <li>New Premium features as they arrive</li>
+        </ul>
+    </div>
+
+    <div class="plan-card">
+        <h4 class="up-h">How to pay</h4>
+        <ol class="up-steps">
+            <li>Open bKash and choose <b>Send Money</b>.</li>
+            <li>Send <b>&#2547;{{ price }}</b> to this number:
+                <div class="bk-number" id="bkNum">{{ number }}</div>
+                <button type="button" class="btn btn-ghost btn-sm" id="bkCopy">Copy number</button>
+            </li>
+            <li>bKash will SMS you a <b>TrxID</b>. Put it below with your own bKash number.</li>
+            <li>We check the payment and activate Premium, usually within a few hours.</li>
+        </ol>
+
+        <form method="POST" action="{{ url_for('upgrade_submit') }}" class="up-form">
+            <label class="setup-label" for="trx">TrxID</label>
+            <input class="form-control" id="trx" name="trx_id" maxlength="20" placeholder="e.g. 8N7A3B2C1D" autocomplete="off" required>
+            <label class="setup-label" for="ph" style="margin-top: 12px;">Your bKash number (the one you paid from)</label>
+            <input class="form-control" id="ph" name="sender_number" maxlength="16" placeholder="01XXXXXXXXX" inputmode="tel" required>
+            <button type="submit" class="btn btn-primary" style="margin-top: 16px;">Submit payment</button>
+        </form>
+    </div>
+</div>
+
+{% if rows %}
+<h3 class="ach-h">Your requests</h3>
+<div class="plan-card">
+    {% for r in rows %}
+    <div class="plan-task" style="padding: 8px 0;">
+        <span style="flex: 1 1 160px;"><code>{{ r.trx }}</code></span>
+        <span class="text-muted" style="font-size: 0.82rem;">{{ r.when }}</span>
+        <b class="up-status s-{{ r.status }}">{{ r.status|capitalize }}</b>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<a href="{{ url_for('dashboard') }}" class="back-link">&larr; Back to Dashboard</a>
+
+<script>
+document.getElementById('bkCopy').addEventListener('click', function () {
+    var n = document.getElementById('bkNum').textContent.trim(), b = this;
+    function done() { b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy number'; }, 1500); }
+    if (navigator.clipboard) { navigator.clipboard.writeText(n).then(done, function () {}); }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,21 @@
+<div class="plan-task {{ 'done' if t.done }}">
+    <label class="plan-check">
+        <input type="checkbox" {{ 'checked' if t.done }}
+               data-url="{{ url_for('toggle_task', subject_id=subject.id, task_id=t.id) }}">
+        <span>{{ t.title }}</span>
+    </label>
+    <span class="plan-kind kind-{{ t.kind }}">{{ t.kind }}</span>
+    {% if t.kind == 'quiz' %}
+        <a class="plan-go" href="{{ url_for('quiz_setup', subject_id=subject.id) }}">Take quiz</a>
+    {% elif t.kind == 'practice' and t.topic %}
+        <form method="POST" action="{{ url_for('start_weak_quiz', subject_id=subject.id) }}" class="inline-form"
+              onsubmit="var b=this.querySelector('button');b.disabled=true;b.textContent='Quiz toiri hocche...';">
+            <input type="hidden" name="topic" value="{{ t.topic }}">
+            <button type="submit" class="plan-go plan-go-btn">Practice quiz</button>
+        </form>
+    {% elif t.kind == 'practice' %}
+        <a class="plan-go" href="{{ url_for('quiz_setup', subject_id=subject.id) }}">Practice quiz</a>
+    {% elif t.topic %}
+        <a class="plan-go" href="{{ url_for('ai_tutor', subject_id=subject.id, chat='new', q='Explain ' ~ t.topic ~ ' in simple words') }}">Study with AI</a>
+    {% endif %}
+</div>
